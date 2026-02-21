@@ -1,0 +1,427 @@
+/* General Styles */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8fafc;
+    color: #334155;
+}
+
+.container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header & Typography */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1e293b;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.3s;
+}
+
+.btn-primary { background-color: #2563eb; color: white; }
+.btn-primary:hover { background-color: #1d4ed8; }
+
+.btn-success { background-color: #16a34a; color: white; }
+.btn-success:hover { background-color: #15803d; }
+
+.btn-secondary { background-color: #cbd5e1; color: #334155; }
+
+/* Cards & Information */
+.card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+/* Tables */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    background-color: #f1f5f9;
+    padding: 1rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+td {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+tr:hover { background-color: #f8fafc; }
+
+/* Forms & Modals */
+.form-container {
+    background-color: #eff6ff;
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid #bfdbfe;
+    margin-bottom: 2rem;
+    animation: fadeIn 0.4s ease;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+input, select, textarea {
+    padding: 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+textarea { grid-column: 1 / -1; }
+
+.action-row {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #64748b;
+}
+/* Auth Styles */
+.auth-wrapper {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* ضع لينك الصورة هنا */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+                      url('../public/authbackground.jpeg');
+    
+    /* لضبط الصورة لتملأ الشاشة بالكامل */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* تجعل الخلفية ثابتة عند التمرير */
+}
+
+/* تعديل بسيط لجعل كارت اللوجن يظهر بوضوح فوق الصورة */
+.auth-card {
+    background: rgba(255, 255, 255, 0.95); /* جعل الخلفية بيضاء قليلاً مع شفافية بسيطة */
+    backdrop-filter: blur(5px); /* تأثير ضبابي خلف الكارت */
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 420px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header h2 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.8rem;
+}
+
+.auth-header p {
+    color: #64748b;
+    margin-top: 0.5rem;
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+.input-group input {
+    padding: 0.8rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.w-full {
+    width: 100%;
+    justify-content: center;
+    padding: 0.9rem;
+    font-size: 1rem;
+}
+
+.auth-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.auth-footer a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+/* ================= Container & Cards ================= */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
+
+/* ================= Buttons ================= */
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.btn-success { background-color: #34d399; color: white; }
+.btn-success:hover { background-color: #059669; }
+
+.btn-primary { background-color: #3b82f6; color: white; }
+.btn-primary:hover { background-color: #1d4ed8; }
+
+.btn-secondary { background-color: #9ca3af; color: white; }
+.btn-secondary:hover { background-color: #6b7280; }
+
+.btn-info { background-color: #0ea5e9; color: white; }
+.btn-info:hover { background-color: #0284c7; }
+
+/* ================= Pregnancy Table & Form ================= */
+.pregnancy-section {
+  margin-top: 30px;
+}
+
+.pregnancy-section h3 {
+  color: #1e3a8a;
+  margin-bottom: 15px;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.pregnancy-table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  background: #f9fafb;
+}
+
+.pregnancy-table-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pregnancy-table-container th,
+.pregnancy-table-container td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  font-size: 14px;
+}
+
+.pregnancy-table-container th {
+  background-color: #e0f2fe;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.pregnancy-table-container td button {
+  margin-right: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+/* ================= Pregnancy Form ================= */
+.pregnancy-form-container {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  margin-top: 15px;
+}
+
+.pregnancy-form-container form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.pregnancy-form-container input,
+.pregnancy-form-container select,
+.pregnancy-form-container textarea {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.pregnancy-form-container input:focus,
+.pregnancy-form-container select:focus,
+.pregnancy-form-container textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 8px rgba(59,130,246,0.2);
+  outline: none;
+}
+
+.pregnancy-form-container textarea {
+  grid-column: 1 / -1;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.pregnancy-form-container .form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
+/* ================= Buttons ================= */
+.btn-edit, .btn-delete, .btn-add, .btn-cancel {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px; /* أنسيابي */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Edit Button */
+.btn-edit { background-color: #fbbf24; color: white; }
+.btn-edit:hover { background-color: #f59e0b; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.15); }
+
+/* Delete Button */
+.btn-delete { background-color: #f87171; color: white; }
+.btn-delete:hover { background-color: #ef4444; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.15); }
+
+/* Add Button */
+.btn-add { background-color: #34d399; color: white; }
+.btn-add:hover { background-color: #059669; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.15); }
+
+/* Cancel Button */
+.btn-cancel { background-color: #9ca3af; color: white; }
+.btn-cancel:hover { background-color: #6b7280; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.15); }
+
+/* ================= Responsive ================= */
+@media (max-width: 768px) {
+  .pregnancy-form-container form {
+    grid-template-columns: 1fr;
+  }
+}

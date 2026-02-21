@@ -1,25 +1,59 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import PatientDetails from './pages/PatientDetails';
+import AdminDashboard from './pages/AdminDashboard';
+import ClinicOwnerDashboard from './pages/ClinicOwnerDashboard';
+
+const ProtectedRoute = ({ children }) => {
+    const token = localStorage.getItem('token');
+    if (!token) return <Navigate to="/login" replace />;
+    return children;
+};
+
+const AdminOnly = ({ children }) => {
+    const role = localStorage.getItem('userRole');
+    if (role !== 'ADMIN') return <Navigate to="/" replace />; // صححنا "Admin" -> "ADMIN"
+    return children;
+};
+
+const ClinicOwnerOnly = ({ children }) => {
+    const role = localStorage.getItem('userRole');
+    if (role !== 'OWNER') return <Navigate to="/" replace />; // "ClinicOwner" -> "OWNER"
+    return children;
+};
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <Router>
+            <div className="App">
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+
+                    <Route path="/admin" element={
+                        <ProtectedRoute><AdminOnly><AdminDashboard /></AdminOnly></ProtectedRoute>
+                    } />
+                    <Route path="/clinic-owner" element={
+                        <ProtectedRoute><ClinicOwnerOnly><ClinicOwnerDashboard /></ClinicOwnerOnly></ProtectedRoute>
+                    } />
+                    <Route path="/dashboard" element={
+                        <ProtectedRoute><Dashboard /></ProtectedRoute>
+                    } />
+                    <Route path="/patient/:id" element={
+                        <ProtectedRoute><PatientDetails /></ProtectedRoute>
+                    } />
+
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </div>
+        </Router>
+    );
 }
 
 export default App;
