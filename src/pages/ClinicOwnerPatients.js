@@ -24,7 +24,7 @@ const ClinicOwnerPatients = () => {
         if (!clinicId) return;
         getPatients(clinicId)
             .then((res) => setPatients(Array.isArray(res.data) ? res.data : []))
-            .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load patients' }));
+            .catch((err) => Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Could not load patients' }));
     };
 
     useEffect(() => {

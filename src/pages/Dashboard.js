@@ -1,106 +1,104 @@
 import React, { useEffect, useState } from 'react';
-import { getPatients, createPatient } from "../services/api";
-import { UserPlus, Eye, X, LogOut } from 'lucide-react';
+import { UserPlus, Eye, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { getPatients, createPatient } from '../services/api';
 import '../styles.css';
+
+const getClinicId = () => {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        return user.clinicId ?? null;
+    } catch {
+        return null;
+    }
+};
 
 const Dashboard = () => {
     const navigate = useNavigate();
-
-    // ======== State Variables ========
     const [patients, setPatients] = useState([]);
     const [filteredPatients, setFilteredPatients] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [reasonFilter, setReasonFilter] = useState('');
-    const [newPatient, setNewPatient] = useState({
-        name: '', age: '', phone: '', maritalStatus: 'Madam',
-        bloodType: 'A', rhFactor: '+', clinicLocation: 'Giza',
-        husbandName: '', husbandJob: '', marriageDate: '',
-        reasonForVisit: 'Antinatal', chronicDiseases: '',
-        familyHistory: '', otherNotes: ''
-    });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [clinicId, setClinicId] = useState(getClinicId());
+    const [newPatient, setNewPatient] = useState({ name: '', age: '', gender: '', contactInfo: '' });
+    const doctorName = localStorage.getItem('doctorName') || JSON.parse(localStorage.getItem('user') || '{}').name || 'User';
 
-     // هنا نجيب اسم اليوزر من localStorage
-    const doctorName = localStorage.getItem('doctorName') || 'User';
+    const loadPatients = () => {
+        const cid = getClinicId();
+        setClinicId(cid);
+        if (!cid) {
+            setPatients([]);
+            return;
+        }
+        getPatients(cid)
+            .then((res) => {
+                const list = Array.isArray(res.data) ? res.data : [];
+                setPatients(list);
+                setFilteredPatients(list);
+            })
+            .catch((err) =>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.response?.data?.message || 'Could not load patients'
+                })
+            );
+    };
 
-
-    // ======== Load Patients ========
     useEffect(() => {
         loadPatients();
     }, []);
 
     useEffect(() => {
-        // Apply Search & Filter
         let filtered = patients;
-
-        if (searchQuery.trim() !== '') {
-            filtered = filtered.filter(p => 
-                p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                p.phone.includes(searchQuery)
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            filtered = patients.filter(
+                (p) =>
+                    (p.name && p.name.toLowerCase().includes(q)) ||
+                    (p.contactInfo && String(p.contactInfo).toLowerCase().includes(q))
             );
         }
-
-        if (reasonFilter !== '') {
-            filtered = filtered.filter(p => p.reasonForVisit === reasonFilter);
-        }
-
         setFilteredPatients(filtered);
-    }, [searchQuery, reasonFilter, patients]);
+    }, [searchQuery, patients]);
 
-    const loadPatients = () => {
-        getPatients()
-            .then(res => setPatients(res.data.data))
-            .catch(err => Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Could not load patients'
-            }));
-    };
-
-    // ======== Handle Form Inputs ========
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setNewPatient({ ...newPatient, [name]: value });
-    };
-
-    // ======== Add Patient ========
     const handleAddPatient = async (e) => {
         e.preventDefault();
+        const cid = getClinicId();
+        if (!cid) {
+            Swal.fire({ icon: 'warning', title: 'Error', text: 'No clinic assigned' });
+            return;
+        }
+        if (!newPatient.name.trim()) {
+            Swal.fire({ icon: 'warning', title: 'Missing fields', text: 'Patient name is required' });
+            return;
+        }
         try {
-            await createPatient(newPatient);
+            await createPatient({
+                name: newPatient.name.trim(),
+                age: newPatient.age ? Number(newPatient.age) : null,
+                gender: newPatient.gender.trim() || null,
+                contactInfo: newPatient.contactInfo.trim() || null,
+                clinicId: cid
+            });
             setIsModalOpen(false);
+            setNewPatient({ name: '', age: '', gender: '', contactInfo: '' });
             loadPatients();
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Patient added successfully!',
-                showConfirmButton: false,
-                timer: 1500
-            });
-
-            setNewPatient({
-                name: '', age: '', phone: '', maritalStatus: 'Madam',
-                bloodType: 'A', rhFactor: '+', clinicLocation: 'Giza',
-                husbandName: '', husbandJob: '', marriageDate: '',
-                reasonForVisit: 'Antinatal', chronicDiseases: '',
-                familyHistory: '', otherNotes: ''
-            });
-        } catch (error) {
+            Swal.fire({ icon: 'success', title: 'Patient added successfully!', showConfirmButton: false, timer: 1500 });
+        } catch (err) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Could not save patient'
+                text: err.response?.data?.message || 'Could not save patient'
             });
         }
     };
 
-    // ======== Log Out ========
     const handleLogout = () => {
         Swal.fire({
             title: 'Are you sure?',
-            text: "You will be logged out!",
+            text: 'You will be logged out!',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -113,58 +111,48 @@ const Dashboard = () => {
                 localStorage.removeItem('userRole');
                 localStorage.removeItem('user');
                 navigate('/');
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Logged Out!',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
+                Swal.fire({ icon: 'success', title: 'Logged Out!', showConfirmButton: false, timer: 1500 });
             }
-        })
+        });
     };
 
     return (
         <div className="container">
-         {/* Welcome message + Logout */}
-<div style={{
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    margin: '15px 0',
-    padding: '15px 20px',
-    background: 'linear-gradient(90deg, #6EE7B7, #3B82F6)',
-    color: 'white',
-    borderRadius: '12px',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-    fontWeight: '600',
-    fontSize: '1.1rem'
-}}>
-    <div>
-        <span style={{ fontSize: '1.3rem', fontWeight: '700' }}></span>
-        <span style={{ marginLeft: '10px' }}>Welcome back, {doctorName}!</span>
-    </div>
-    <button
-        className="btn btn-secondary"
-        onClick={handleLogout}
-        style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            background: 'white',
-            color: '#3B82F6',
-            padding: '5px 10px',
-            borderRadius: '8px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            border: 'none'
-        }}
-    >
-        <LogOut size={16} /> Log Out
-    </button>
-</div>
+            <header
+                style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    margin: '15px 0',
+                    padding: '15px 20px',
+                    background: 'linear-gradient(90deg, #6EE7B7, #3B82F6)',
+                    color: 'white',
+                    borderRadius: '12px',
+                    fontWeight: '600',
+                    fontSize: '1.1rem'
+                }}
+            >
+                <span>Welcome back, {doctorName}!</span>
+                <button
+                    className="btn btn-secondary"
+                    onClick={handleLogout}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        background: 'white',
+                        color: '#3B82F6',
+                        padding: '5px 10px',
+                        borderRadius: '8px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        border: 'none'
+                    }}
+                >
+                    <LogOut size={16} /> Log Out
+                </button>
+            </header>
 
-
-            {/* ===== Page Header ===== */}
             <div className="page-header">
                 <h1 className="title">Patients Dashboard</h1>
                 <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
@@ -172,83 +160,103 @@ const Dashboard = () => {
                 </button>
             </div>
 
-            {/* ===== Search & Filter ===== */}
-            <div style={{ display: 'flex', gap: '10px', margin: '15px 0' }}>
-                <input
-                    type="text"
-                    placeholder="Search by Name or Phone"
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    style={{ flex: 2, padding: '5px' }}
-                />
-                <select 
-                    value={reasonFilter} 
-                    onChange={e => setReasonFilter(e.target.value)} 
-                    style={{ flex: 1, padding: '5px' }}
-                >
-                    <option value="">All Reasons</option>
-                    <option value="Antinatal">Antinatal</option>
-                    <option value="Postnatal">Postnatal</option>
-                    <option value="Virgin">Virgin</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
+            {!clinicId ? (
+                <p style={{ color: '#64748b' }}>No clinic assigned. Contact your clinic owner or admin.</p>
+            ) : (
+                <>
+                    <div style={{ display: 'flex', gap: '10px', margin: '15px 0' }}>
+                        <input
+                            type="text"
+                            placeholder="Search by name or contact"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ flex: 2, padding: '8px' }}
+                        />
+                    </div>
 
-            {/* ===== Modal: Add Patient ===== */}
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th>Contact</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredPatients.length === 0 && (
+                                    <tr>
+                                        <td colSpan="6">No patients yet. Add one to get started.</td>
+                                    </tr>
+                                )}
+                                {filteredPatients.map((p) => (
+                                    <tr key={p.id}>
+                                        <td><code>{p.id}</code></td>
+                                        <td>{p.name}</td>
+                                        <td>{p.age ?? '—'}</td>
+                                        <td>{p.gender ?? '—'}</td>
+                                        <td>{p.contactInfo ?? '—'}</td>
+                                        <td>
+                                            <Link to={`/patient/${p.id}`} style={{ color: '#2563eb', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Eye size={20} /> View & Manage
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
+
             {isModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h2 className="title">Patient Registration</h2>
-                            <button className="close-modal" onClick={() => setIsModalOpen(false)}><X /></button>
+                            <h2 className="title">Add Patient</h2>
+                            <button className="close-modal" onClick={() => setIsModalOpen(false)}>×</button>
                         </div>
-                        <form onSubmit={handleAddPatient} className="form-grid">
-                            <input type="text" name="name" placeholder="Patient Full Name" required onChange={handleInputChange} />
-                            <input type="number" name="age" placeholder="Age" onChange={handleInputChange} />
-                            <input type="text" name="phone" placeholder="Phone Number" onChange={handleInputChange} />
-
-                            <select name="maritalStatus" onChange={handleInputChange}>
-                                <option value="Madam">Madam (متزوجة)</option>
-                                <option value="Miss">Miss (آنسة)</option>
-                            </select>
-
-                            <select name="clinicLocation" onChange={handleInputChange}>
-                                <option value="Al Sayeda Zainab">Clinic: السيدة زينب</option>
-                                <option value="Giza">Clinic: الجيزة</option>
-                            </select>
-
-                            <div style={{ display: 'flex', gap: '5px' }}>
-                                <select name="bloodType" style={{ flex: 2 }} onChange={handleInputChange}>
-                                    <option value="A">Type A</option>
-                                    <option value="B">Type B</option>
-                                    <option value="AB">Type AB</option>
-                                    <option value="O">Type O</option>
-                                </select>
-                                <select name="rhFactor" style={{ flex: 1 }} onChange={handleInputChange}>
-                                    <option value="+">RH+</option>
-                                    <option value="-">RH-</option>
-                                </select>
+                        <form onSubmit={handleAddPatient}>
+                            <div className="input-group">
+                                <label>Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={newPatient.name}
+                                    onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
+                                    placeholder="Full name"
+                                />
                             </div>
-
-                            {newPatient.maritalStatus === 'Madam' && (
-                                <>
-                                    <input type="text" name="husbandName" placeholder="Husband Name" onChange={handleInputChange} />
-                                    <input type="text" name="husbandJob" placeholder="Husband Job" onChange={handleInputChange} />
-                                    <input type="date" name="marriageDate" onChange={handleInputChange} />
-                                </>
-                            )}
-
-                            <select name="reasonForVisit" onChange={handleInputChange}>
-                                <option value="Antinatal">Antinatal</option>
-                                <option value="Postnatal">Postnatal</option>
-                                <option value="Virgin">Virgin</option>
-                                <option value="Other">Other</option>
-                            </select>
-
-                            <textarea name="chronicDiseases" placeholder="Chronic Diseases" onChange={handleInputChange}></textarea>
-                            <textarea name="familyHistory" placeholder="Family Medical History" onChange={handleInputChange}></textarea>
-                            <textarea name="otherNotes" placeholder="Other Notes" onChange={handleInputChange}></textarea>
-
+                            <div className="input-group">
+                                <label>Age</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={newPatient.age}
+                                    onChange={(e) => setNewPatient({ ...newPatient, age: e.target.value })}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Gender</label>
+                                <input
+                                    type="text"
+                                    value={newPatient.gender}
+                                    onChange={(e) => setNewPatient({ ...newPatient, gender: e.target.value })}
+                                    placeholder="e.g. Female"
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Contact info</label>
+                                <input
+                                    type="text"
+                                    value={newPatient.contactInfo}
+                                    onChange={(e) => setNewPatient({ ...newPatient, contactInfo: e.target.value })}
+                                    placeholder="Phone or email"
+                                />
+                            </div>
                             <div className="action-row">
                                 <button type="submit" className="btn btn-primary">Save Patient</button>
                                 <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
@@ -257,38 +265,6 @@ const Dashboard = () => {
                     </div>
                 </div>
             )}
-
-            {/* ===== Patients Table ===== */}
-            <div className="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Clinic</th>
-                            <th>Marital Status</th>
-                            <th>Blood / RH</th>
-                            <th>Reason</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredPatients.map(p => (
-                            <tr key={p.id}>
-                                <td>{p.name}</td>
-                                <td>{p.clinicLocation}</td>
-                                <td>{p.maritalStatus}</td>
-                                <td>{p.bloodType} {p.rhFactor}</td>
-                                <td>{p.reasonForVisit}</td>
-                                <td>
-                                    <Link to={`/patient/${p.id}`} style={{ color: '#2563eb' }}>
-                                        <Eye size={20} />
-                                    </Link>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
         </div>
     );
 };

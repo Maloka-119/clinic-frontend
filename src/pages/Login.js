@@ -17,10 +17,10 @@ const Login = () => {
         const res = await login({ email, password });
         const { token, user } = res.data;
 
-        // تخزين الـ token والـ user
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('userRole', user.role); // خدي الـ role زي ما جاي من الباك
+        localStorage.setItem('userRole', user.role);
+        localStorage.setItem('doctorName', user.name || '');
 
         await Swal.fire({
             icon: 'success',
