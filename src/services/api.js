@@ -27,6 +27,7 @@ export const listEmployees = (clinicId) =>
     clinicId ? API.get('/employees', { params: { clinicId } }) : API.get('/employees');
 /** List users (employees + owner) for a clinic - same as listEmployees(clinicId) */
 export const listClinicUsers = (clinicId) => API.get('/employees', { params: { clinicId } });
+export const createEmployee = (data) => API.post('/employees', data);
 export const toggleEmployeeActive = (id) => API.patch(`/employees/${id}/toggle`);
 
 // User approval (if backend supports these)

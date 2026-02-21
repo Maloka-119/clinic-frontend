@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import PatientDetails from './pages/PatientDetails';
 import AdminDashboard from './pages/AdminDashboard';
 import ClinicOwnerDashboard from './pages/ClinicOwnerDashboard';
+import ClinicOwnerPatients from './pages/ClinicOwnerPatients';
 
 const ProtectedRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -41,6 +42,9 @@ function App() {
                     } />
                     <Route path="/clinic-owner" element={
                         <ProtectedRoute><ClinicOwnerOnly><ClinicOwnerDashboard /></ClinicOwnerOnly></ProtectedRoute>
+                    } />
+                    <Route path="/clinic-owner/patients" element={
+                        <ProtectedRoute><ClinicOwnerOnly><ClinicOwnerPatients /></ClinicOwnerOnly></ProtectedRoute>
                     } />
                     <Route path="/dashboard" element={
                         <ProtectedRoute><Dashboard /></ProtectedRoute>
