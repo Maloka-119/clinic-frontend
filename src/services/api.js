@@ -14,8 +14,8 @@ API.interceptors.request.use((config) => {
 
 // Auth
 export const login = (data) => API.post('/auth/login', data);
-export const register = (data) => API.post('/auth/register', data);
 export const getMe = () => API.get('/auth/me');
+export const changePassword = (data) => API.post('/auth/change-password', data);
 
 // Clinics
 export const createClinic = (data) => API.post('/clinics', data);
@@ -43,6 +43,13 @@ export const updatePatient = (id, data) => API.put(`/patients/${id}`, data);
 export const deletePatient = (id) => API.delete(`/patients/${id}`);
 export const addVisit = (data) => API.post('/visits', data);
 export const getVisitsByBranch = (branchId) => API.get(`/visits/${branchId}`);
+
+// Previous Deliveries
+export const getPreviousDeliveriesByPatient = (patientId) => API.get(`/previous-deliveries/patient/${patientId}`);
+export const createPreviousDelivery = (data) => API.post('/previous-deliveries', data);
+export const getPreviousDelivery = (id) => API.get(`/previous-deliveries/${id}`);
+export const updatePreviousDelivery = (id, data) => API.put(`/previous-deliveries/${id}`, data);
+export const deletePreviousDelivery = (id) => API.delete(`/previous-deliveries/${id}`);
 
 // Branches
 export const listBranches = (clinicId) => API.get(`/branches/${clinicId}`);

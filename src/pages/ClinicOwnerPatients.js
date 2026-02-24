@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { getPatients, createPatient } from '../services/api';
+import { getPatients } from '../services/api';
+import OwnerPatientForm from '../components/OwnerPatientForm';
 import '../styles.css';
 
 const getClinicId = () => {
@@ -18,7 +19,6 @@ const ClinicOwnerPatients = () => {
     const [clinicId, setClinicId] = useState(getClinicId());
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ name: '', age: '', gender: '', contactInfo: '' });
 
     const loadPatients = () => {
         if (!clinicId) return;
@@ -38,54 +38,18 @@ const ClinicOwnerPatients = () => {
         setLoading(false);
     }, [clinicId]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!form.name.trim()) {
-            Swal.fire({ icon: 'warning', title: 'Missing fields', text: 'Patient name is required' });
-            return;
-        }
-        if (!clinicId) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'No clinic assigned' });
-            return;
-        }
-        try {
-            await createPatient({
-                name: form.name.trim(),
-                age: form.age ? Number(form.age) : null,
-                gender: form.gender.trim() || null,
-                contactInfo: form.contactInfo.trim() || null,
-                clinicId
-            });
-            setShowModal(false);
-            setForm({ name: '', age: '', gender: '', contactInfo: '' });
-            loadPatients();
-            Swal.fire({ icon: 'success', title: 'Patient added', showConfirmButton: false, timer: 1500 });
-        } catch (err) {
-            Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Failed to add patient' });
-        }
-    };
-
     const doctorName = JSON.parse(localStorage.getItem('user') || '{}').name || 'Clinic Owner';
 
     return (
         <div className="container">
-            <header
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    margin: '15px 0',
-                    padding: '15px 20px',
-                    background: 'linear-gradient(90deg, #6EE7B7, #3B82F6)',
-                    color: 'white',
-                    borderRadius: '12px',
-                    fontWeight: '600'
-                }}
-            >
+            <header className="app-header">
                 <span>Clinic Owner: {doctorName}</span>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="header-actions">
                     <Link to="/clinic-owner" className="btn btn-secondary" style={{ background: 'white', color: '#3B82F6' }}>
                         ← Dashboard
+                    </Link>
+                    <Link to="/change-password" className="btn btn-secondary" style={{ background: 'white', color: '#3B82F6' }}>
+                        Change password
                     </Link>
                 </div>
             </header>
@@ -107,24 +71,22 @@ const ClinicOwnerPatients = () => {
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Age</th>
-                                <th>Gender</th>
-                                <th>Contact</th>
+                                <th>Blood type</th>
+                                <th>RH factor</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {patients.length === 0 && (
                                 <tr>
-                                    <td colSpan="5">No patients yet. Add one to get started.</td>
+                                    <td colSpan="4">No patients yet. Add one to get started.</td>
                                 </tr>
                             )}
                             {patients.map((p) => (
                                 <tr key={p.id}>
                                     <td>{p.name}</td>
-                                    <td>{p.age ?? '—'}</td>
-                                    <td>{p.gender ?? '—'}</td>
-                                    <td>{p.contactInfo ?? '—'}</td>
+                                    <td>{p.bloodType ?? '—'}</td>
+                                    <td>{p.rhFactor ?? '—'}</td>
                                     <td>
                                         <Link to={`/patient/${p.id}`} className="btn btn-primary" style={{ textDecoration: 'none' }}>
                                             View & Manage Visits
@@ -144,52 +106,11 @@ const ClinicOwnerPatients = () => {
                             <h2>Add Patient</h2>
                             <button className="close-modal" onClick={() => setShowModal(false)}>×</button>
                         </div>
-                        <form onSubmit={handleSubmit}>
-                            <div className="input-group">
-                                <label>Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={form.name}
-                                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>Age</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={form.age}
-                                    onChange={(e) => setForm({ ...form, age: e.target.value })}
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>Gender</label>
-                                <input
-                                    type="text"
-                                    value={form.gender}
-                                    placeholder="e.g. Female"
-                                    onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>Contact Info</label>
-                                <input
-                                    type="text"
-                                    value={form.contactInfo}
-                                    placeholder="Phone or email"
-                                    onChange={(e) => setForm({ ...form, contactInfo: e.target.value })}
-                                />
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
-                                <button type="submit" className="btn btn-primary">
-                                    Add Patient
-                                </button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
+                        <OwnerPatientForm
+                            clinicId={clinicId}
+                            onSuccess={() => { setShowModal(false); loadPatients(); }}
+                            onCancel={() => setShowModal(false)}
+                        />
                     </div>
                 </div>
             )}

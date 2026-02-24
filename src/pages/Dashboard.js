@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { UserPlus, Eye, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { getPatients, createPatient } from '../services/api';
+import { getPatients } from '../services/api';
+import PatientEntryForm from '../components/PatientEntryForm';
 import '../styles.css';
 
 const getClinicId = () => {
@@ -63,38 +64,6 @@ const Dashboard = () => {
         setFilteredPatients(filtered);
     }, [searchQuery, patients]);
 
-    const handleAddPatient = async (e) => {
-        e.preventDefault();
-        const cid = getClinicId();
-        if (!cid) {
-            Swal.fire({ icon: 'warning', title: 'Error', text: 'No clinic assigned' });
-            return;
-        }
-        if (!newPatient.name.trim()) {
-            Swal.fire({ icon: 'warning', title: 'Missing fields', text: 'Patient name is required' });
-            return;
-        }
-        try {
-            await createPatient({
-                name: newPatient.name.trim(),
-                age: newPatient.age ? Number(newPatient.age) : null,
-                gender: newPatient.gender.trim() || null,
-                contactInfo: newPatient.contactInfo.trim() || null,
-                clinicId: cid
-            });
-            setIsModalOpen(false);
-            setNewPatient({ name: '', age: '', gender: '', contactInfo: '' });
-            loadPatients();
-            Swal.fire({ icon: 'success', title: 'Patient added successfully!', showConfirmButton: false, timer: 1500 });
-        } catch (err) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: err.response?.data?.message || 'Could not save patient'
-            });
-        }
-    };
-
     const handleLogout = () => {
         Swal.fire({
             title: 'Are you sure?',
@@ -118,39 +87,31 @@ const Dashboard = () => {
 
     return (
         <div className="container">
-            <header
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    margin: '15px 0',
-                    padding: '15px 20px',
-                    background: 'linear-gradient(90deg, #6EE7B7, #3B82F6)',
-                    color: 'white',
-                    borderRadius: '12px',
-                    fontWeight: '600',
-                    fontSize: '1.1rem'
-                }}
-            >
+            <header className="app-header" style={{ fontSize: '1.1rem' }}>
                 <span>Welcome back, {doctorName}!</span>
-                <button
-                    className="btn btn-secondary"
-                    onClick={handleLogout}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        background: 'white',
-                        color: '#3B82F6',
-                        padding: '5px 10px',
-                        borderRadius: '8px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        border: 'none'
-                    }}
-                >
-                    <LogOut size={16} /> Log Out
-                </button>
+                <div className="header-actions">
+                    <Link to="/change-password" className="btn btn-secondary" style={{ background: 'white', color: '#3B82F6', padding: '5px 10px', borderRadius: '8px', fontWeight: '600', textDecoration: 'none' }}>
+                        Change password
+                    </Link>
+                    <button
+                        className="btn btn-secondary"
+                        onClick={handleLogout}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            background: 'white',
+                            color: '#3B82F6',
+                            padding: '5px 10px',
+                            borderRadius: '8px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            border: 'none'
+                        }}
+                    >
+                        <LogOut size={16} /> Log Out
+                    </button>
+                </div>
             </header>
 
             <div className="page-header">
@@ -178,27 +139,23 @@ const Dashboard = () => {
                         <table>
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Name</th>
-                                    <th>Age</th>
-                                    <th>Gender</th>
-                                    <th>Contact</th>
+                                    <th>Blood type</th>
+                                    <th>RH factor</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredPatients.length === 0 && (
                                     <tr>
-                                        <td colSpan="6">No patients yet. Add one to get started.</td>
+                                        <td colSpan="4">No patients yet. Add one to get started.</td>
                                     </tr>
                                 )}
                                 {filteredPatients.map((p) => (
                                     <tr key={p.id}>
-                                        <td><code>{p.id}</code></td>
                                         <td>{p.name}</td>
-                                        <td>{p.age ?? '—'}</td>
-                                        <td>{p.gender ?? '—'}</td>
-                                        <td>{p.contactInfo ?? '—'}</td>
+                                        <td>{p.bloodType ?? '—'}</td>
+                                        <td>{p.rhFactor ?? '—'}</td>
                                         <td>
                                             <Link to={`/patient/${p.id}`} style={{ color: '#2563eb', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <Eye size={20} /> View & Manage
@@ -214,54 +171,16 @@ const Dashboard = () => {
 
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content">
+                    <div className="modal-content" style={{ maxHeight: '90vh', overflow: 'auto' }}>
                         <div className="modal-header">
                             <h2 className="title">Add Patient</h2>
                             <button className="close-modal" onClick={() => setIsModalOpen(false)}>×</button>
                         </div>
-                        <form onSubmit={handleAddPatient}>
-                            <div className="input-group">
-                                <label>Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={newPatient.name}
-                                    onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
-                                    placeholder="Full name"
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>Age</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={newPatient.age}
-                                    onChange={(e) => setNewPatient({ ...newPatient, age: e.target.value })}
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>Gender</label>
-                                <input
-                                    type="text"
-                                    value={newPatient.gender}
-                                    onChange={(e) => setNewPatient({ ...newPatient, gender: e.target.value })}
-                                    placeholder="e.g. Female"
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>Contact info</label>
-                                <input
-                                    type="text"
-                                    value={newPatient.contactInfo}
-                                    onChange={(e) => setNewPatient({ ...newPatient, contactInfo: e.target.value })}
-                                    placeholder="Phone or email"
-                                />
-                            </div>
-                            <div className="action-row">
-                                <button type="submit" className="btn btn-primary">Save Patient</button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                            </div>
-                        </form>
+                        <PatientEntryForm
+                            isOwner={false}
+                            onSuccess={() => { setIsModalOpen(false); loadPatients(); }}
+                            onCancel={() => setIsModalOpen(false)}
+                        />
                     </div>
                 </div>
             )}

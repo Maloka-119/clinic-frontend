@@ -3,8 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import {
     listClinicUsers,
-    approveUser,
-    rejectUser,
     listBranches,
     createBranch,
     listEmployees,
@@ -24,7 +22,7 @@ const getClinicId = () => {
 
 const ClinicOwnerDashboard = () => {
     const navigate = useNavigate();
-    const [section, setSection] = useState('overview'); // overview | branches | employees
+    const [section, setSection] = useState('branches'); // branches | employees
     const [users, setUsers] = useState([]);
     const [branches, setBranches] = useState([]);
     const [employees, setEmployees] = useState([]);
@@ -136,30 +134,6 @@ const ClinicOwnerDashboard = () => {
         }
     };
 
-    const handleApprove = async (id) => {
-        const { value } = await Swal.fire({ title: 'Approve this user?', icon: 'question', showCancelButton: true, confirmButtonText: 'Approve' });
-        if (!value) return;
-        try {
-            await approveUser(id);
-            loadUsers();
-            Swal.fire({ icon: 'success', title: 'Approved', showConfirmButton: false, timer: 1500 });
-        } catch (err) {
-            Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Failed' });
-        }
-    };
-
-    const handleReject = async (id) => {
-        const { value } = await Swal.fire({ title: 'Reject this user?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Reject' });
-        if (!value) return;
-        try {
-            await rejectUser(id);
-            loadUsers();
-            Swal.fire({ icon: 'success', title: 'Rejected', showConfirmButton: false, timer: 1500 });
-        } catch (err) {
-            Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Failed' });
-        }
-    };
-
     const handleLogout = () => {
         Swal.fire({ title: 'Log out?', icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, log out' }).then((result) => {
             if (result.isConfirmed) {
@@ -173,31 +147,19 @@ const ClinicOwnerDashboard = () => {
         });
     };
 
-    const pending = users.filter((u) => u.status === 'PENDING');
-    const approved = users.filter((u) => u.status === 'APPROVED');
-
     return (
         <div className="container">
-            <header
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    margin: '15px 0',
-                    padding: '15px 20px',
-                    background: 'linear-gradient(90deg, #6EE7B7, #3B82F6)',
-                    color: 'white',
-                    borderRadius: '12px',
-                    fontWeight: '600'
-                }}
-            >
+            <header className="app-header">
                 <span>Clinic Owner: {doctorName}</span>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="header-actions">
                     <Link to="/" className="btn btn-secondary" style={{ background: 'white', color: '#3B82F6' }}>
                         Home
                     </Link>
                     <Link to="/clinic-owner/patients" className="btn btn-secondary" style={{ background: 'white', color: '#3B82F6' }}>
                         Patients Management
+                    </Link>
+                    <Link to="/change-password" className="btn btn-secondary" style={{ background: 'white', color: '#3B82F6' }}>
+                        Change password
                     </Link>
                     <button className="btn btn-secondary" style={{ background: 'white', color: '#3B82F6' }} onClick={handleLogout}>
                         Log Out
@@ -210,12 +172,6 @@ const ClinicOwnerDashboard = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                <button
-                    className={section === 'overview' ? 'btn btn-primary' : 'btn btn-secondary'}
-                    onClick={() => setSection('overview')}
-                >
-                    Overview
-                </button>
                 <button
                     className={section === 'branches' ? 'btn btn-primary' : 'btn btn-secondary'}
                     onClick={() => setSection('branches')}
@@ -236,68 +192,6 @@ const ClinicOwnerDashboard = () => {
                 <p style={{ color: '#64748b' }}>No clinic assigned. Please contact admin.</p>
             ) : (
                 <>
-                    {section === 'overview' && (
-                        <>
-                            <p style={{ marginBottom: '1rem', color: '#64748b' }}>
-                                Approve or reject registration requests. Manage branches and employees from the tabs above.
-                            </p>
-                            <h2 style={{ marginTop: '1rem' }}>Pending requests ({pending.length})</h2>
-                            <div className="table-container">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {pending.length === 0 && (
-                                            <tr>
-                                                <td colSpan="3">No pending requests</td>
-                                            </tr>
-                                        )}
-                                        {pending.map((u) => (
-                                            <tr key={u.id}>
-                                                <td>{u.name}</td>
-                                                <td>{u.email}</td>
-                                                <td>
-                                                    <button className="btn btn-primary" style={{ marginRight: '4px' }} onClick={() => handleApprove(u.id)}>
-                                                        Approve
-                                                    </button>
-                                                    <button className="btn btn-secondary" onClick={() => handleReject(u.id)}>
-                                                        Reject
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <h2 style={{ marginTop: '1.5rem' }}>Approved users ({approved.length})</h2>
-                            <div className="table-container">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {approved.map((u) => (
-                                            <tr key={u.id}>
-                                                <td>{u.name}</td>
-                                                <td>{u.email}</td>
-                                                <td>{u.isActive ? 'Active' : 'Inactive'}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </>
-                    )}
-
                     {section === 'branches' && (
                         <>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

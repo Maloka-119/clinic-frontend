@@ -9,16 +9,13 @@ const Home = () => {
                 <div className="auth-header">
                     <h1 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Clinic Management System</h1>
                     <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-                        Manage patients, visits, and clinic operations with role-based access. 
-                        Register with your clinic ID or log in if you already have an account.
+                        Welcome to the Clinic Management System – manage patients, clinics, and staff efficiently and securely.
+                        Log in to continue.
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                     <Link to="/login" className="btn btn-primary" style={{ padding: '12px 24px' }}>
                         Login
-                    </Link>
-                    <Link to="/register" className="btn btn-secondary" style={{ padding: '12px 24px' }}>
-                        Register
                     </Link>
                 </div>
             </div>

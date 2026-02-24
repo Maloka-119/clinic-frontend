@@ -1,9 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getPatientDetails, addVisit, listBranches, getVisitsByBranch } from '../services/api';
+import { getPatientDetails, addVisit, listBranches, getVisitsByBranch, createPreviousDelivery, updatePreviousDelivery, deletePreviousDelivery } from '../services/api';
 import '../styles.css';
-import { User, Heart, Calendar, Briefcase } from 'lucide-react';
+import { User, Heart, Calendar, Briefcase, Baby, Plus } from 'lucide-react';
 import Swal from 'sweetalert2';
+
+const REASONS_MISS = ['Bleeding', 'Tumor'];
+const REASONS_MRS = ['Bleeding', 'Tumor', 'Pregnancy follow-up', 'Postpartum follow-up', 'Infertility follow-up'];
+const VISIT_TYPES = ['Checkup', 'Consultation'];
+
+const initialVisitData = {
+    clinicBranchId: '',
+    date: '',
+    notes: '',
+    type: 'Checkup',
+    reason: ''
+};
+
+const initialPreviousDelivery = {
+    deliveryDate: '',
+    deliveryType: 'Normal',
+    babyGender: '',
+    babyWeightAtBirth: '',
+    complications: ''
+};
 
 const PatientDetails = () => {
     const { id } = useParams();
@@ -11,7 +31,11 @@ const PatientDetails = () => {
     const [branches, setBranches] = useState([]);
     const [visits, setVisits] = useState([]);
     const [showVisitForm, setShowVisitForm] = useState(false);
-    const [visitData, setVisitData] = useState({ clinicBranchId: '', date: '', notes: '' });
+    const [visitData, setVisitData] = useState(initialVisitData);
+    const [showPreviousDeliveryModal, setShowPreviousDeliveryModal] = useState(false);
+    const [previousDeliveryForm, setPreviousDeliveryForm] = useState(initialPreviousDelivery);
+    const [editingDeliveryId, setEditingDeliveryId] = useState(null);
+    const [editingDeliveryRecord, setEditingDeliveryRecord] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const fetchDetails = async () => {
@@ -45,22 +69,31 @@ const PatientDetails = () => {
         fetchDetails();
     }, [id]);
 
+    const reasons = data && data.title === 'Mrs' ? REASONS_MRS : REASONS_MISS;
+
     const handleVisitSubmit = async (e) => {
         e.preventDefault();
         if (!visitData.clinicBranchId || !visitData.date) {
             Swal.fire({ icon: 'warning', title: 'Missing fields', text: 'Branch and date are required' });
             return;
         }
+        if (!visitData.reason) {
+            Swal.fire({ icon: 'warning', title: 'Missing fields', text: 'Reason is required' });
+            return;
+        }
         try {
-            await addVisit({
+            const payload = {
                 patientId: id,
                 clinicBranchId: Number(visitData.clinicBranchId),
                 date: visitData.date,
-                notes: visitData.notes.trim() || null
-            });
+                notes: visitData.notes.trim() || null,
+                type: visitData.type || null,
+                reason: visitData.reason || null
+            };
+            await addVisit(payload);
             Swal.fire({ icon: 'success', title: 'Visit added!', showConfirmButton: false, timer: 1500 });
             setShowVisitForm(false);
-            setVisitData({ clinicBranchId: '', date: '', notes: '' });
+            setVisitData(initialVisitData);
             fetchDetails();
         } catch (err) {
             Swal.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Could not record visit.' });
@@ -68,7 +101,71 @@ const PatientDetails = () => {
     };
 
     const deliveryHistories = data && (data.DeliveryHistories || data.deliveryHistories || []);
+    const previousDeliveries = data && (data.PreviousDeliveries || data.previousDeliveries || []);
     const husband = data && (data.HusbandInfo || data.husbandInfo);
+
+    const openAddPreviousDelivery = () => {
+        setEditingDeliveryId(null);
+        setEditingDeliveryRecord(null);
+        setPreviousDeliveryForm(initialPreviousDelivery);
+        setShowPreviousDeliveryModal(true);
+    };
+
+    const openEditPreviousDelivery = (d) => {
+        setEditingDeliveryId(d.id);
+        setEditingDeliveryRecord(d);
+        setPreviousDeliveryForm({
+            deliveryDate: d.deliveryDate ? d.deliveryDate.slice(0, 10) : '',
+            deliveryType: d.deliveryType || 'Normal',
+            babyGender: d.babyGender || '',
+            babyWeightAtBirth: d.babyWeightAtBirth || '',
+            complications: d.complications || ''
+        });
+        setShowPreviousDeliveryModal(true);
+    };
+
+    const handlePreviousDeliverySubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const today = new Date().toISOString().slice(0, 10);
+            if (editingDeliveryId) {
+                await updatePreviousDelivery(editingDeliveryId, previousDeliveryForm);
+                Swal.fire({ icon: 'success', title: 'Updated', showConfirmButton: false, timer: 1500 });
+            } else {
+                await createPreviousDelivery({
+                    patientId: id,
+                    ...previousDeliveryForm,
+                    dateOfEntry: today
+                });
+                Swal.fire({ icon: 'success', title: 'Previous delivery added', showConfirmButton: false, timer: 1500 });
+            }
+            setShowPreviousDeliveryModal(false);
+            setPreviousDeliveryForm(initialPreviousDelivery);
+            setEditingDeliveryId(null);
+            fetchDetails();
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Failed to save.' });
+        }
+    };
+
+    const handleDeletePreviousDelivery = async (deliveryId) => {
+        const result = await Swal.fire({
+            title: 'Delete this record?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete'
+        });
+        if (!result.isConfirmed) return;
+        try {
+            await deletePreviousDelivery(deliveryId);
+            Swal.fire({ icon: 'success', title: 'Deleted', showConfirmButton: false, timer: 1500 });
+            fetchDetails();
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Failed to delete.' });
+        }
+    };
 
     if (loading && !data) return <div className="container">Loading...</div>;
     if (!data) return <div className="container"><p>Patient not found.</p><Link to="/dashboard">Back to Dashboard</Link></div>;
@@ -83,48 +180,137 @@ const PatientDetails = () => {
                 })()}
             </div>
 
-            <div
-                className="card"
-                style={{
-                    padding: '25px',
-                    marginBottom: '25px',
-                    borderRadius: '15px',
-                    background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
-                }}
-            >
+            <div className="card patient-detail-card">
                 <h2 style={{ fontSize: '1.5rem', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <User size={28} /> {data.name}
+                    {data.title && <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#1e3a8a' }}>({data.title})</span>}
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
                     <p style={{ margin: 0, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Calendar size={16} /> Age: {data.age ?? '—'}
                     </p>
-                    <p style={{ margin: 0, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        Gender: {data.gender ?? '—'}
-                    </p>
-                    <p style={{ margin: 0, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        Contact: {data.contactInfo ?? '—'}
-                    </p>
+                    <p style={{ margin: 0, color: '#1e3a8a' }}>Blood type: {data.bloodType ?? '—'}</p>
+                    <p style={{ margin: 0, color: '#1e3a8a' }}>RH factor: {data.rhFactor ?? '—'}</p>
+                    <p style={{ margin: 0, color: '#1e3a8a' }}>Contact: {data.contactInfo ?? '—'}</p>
                 </div>
+                {data.chronicIllnessesOrFamilyHistory && (
+                    <p style={{ margin: '12px 0 0 0', color: '#1e3a8a' }}>Chronic illnesses / family history: {data.chronicIllnessesOrFamilyHistory}</p>
+                )}
                 {husband && (
                     <div style={{ marginTop: '1rem', padding: '12px', background: 'rgba(255,255,255,0.5)', borderRadius: '8px' }}>
                         <h4 style={{ margin: '0 0 8px 0' }}><Briefcase size={16} /> Husband info</h4>
                         <p style={{ margin: 0 }}>Name: {husband.name}</p>
                         {husband.job && <p style={{ margin: 0 }}>Job: {husband.job}</p>}
                         {husband.phone && <p style={{ margin: 0 }}>Phone: {husband.phone}</p>}
-                        {husband.marriageDate && <p style={{ margin: 0 }}>Marriage: {new Date(husband.marriageDate).toLocaleDateString()}</p>}
+                        {husband.marriageDuration && <p style={{ margin: 0 }}>Marriage duration: {husband.marriageDuration}</p>}
+                        {husband.marriageDate && <p style={{ margin: 0 }}>Marriage date: {new Date(husband.marriageDate).toLocaleDateString()}</p>}
                     </div>
                 )}
-                <div style={{ marginTop: '1rem' }}>
+                <div style={{ marginTop: '1rem', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button className="btn btn-primary" onClick={() => setShowVisitForm(true)}>+ Add visit</button>
+                    <button type="button" className="btn btn-secondary" onClick={openAddPreviousDelivery} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Baby size={18} /> Add Previous Delivery
+                    </button>
                 </div>
             </div>
+
+            {/* Previous Deliveries modal */}
+            {showPreviousDeliveryModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2>{editingDeliveryId ? 'Edit' : 'Add'} Previous Delivery</h2>
+                            <button className="close-modal" onClick={() => { setShowPreviousDeliveryModal(false); setEditingDeliveryId(null); }}>×</button>
+                        </div>
+                        <form onSubmit={handlePreviousDeliverySubmit}>
+                            <div className="input-group">
+                                <label>Date of entry</label>
+                                <input
+                                    type="date"
+                                    readOnly
+                                    value={editingDeliveryId && editingDeliveryRecord?.dateOfEntry ? editingDeliveryRecord.dateOfEntry.slice(0, 10) : new Date().toISOString().slice(0, 10)}
+                                />
+                                <small style={{ color: '#64748b' }}>Set automatically to today when adding.</small>
+                            </div>
+                            <div className="input-group">
+                                <label>Delivery date</label>
+                                <input
+                                    type="date"
+                                    value={previousDeliveryForm.deliveryDate}
+                                    onChange={(e) => setPreviousDeliveryForm({ ...previousDeliveryForm, deliveryDate: e.target.value })}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Delivery type</label>
+                                <select
+                                    value={previousDeliveryForm.deliveryType}
+                                    onChange={(e) => setPreviousDeliveryForm({ ...previousDeliveryForm, deliveryType: e.target.value })}
+                                >
+                                    <option value="Normal">Normal</option>
+                                    <option value="Cesarean">Cesarean</option>
+                                </select>
+                            </div>
+                            <div className="input-group">
+                                <label>Baby gender</label>
+                                <select
+                                    value={previousDeliveryForm.babyGender}
+                                    onChange={(e) => setPreviousDeliveryForm({ ...previousDeliveryForm, babyGender: e.target.value })}
+                                >
+                                    <option value="">—</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div className="input-group">
+                                <label>Baby weight at birth</label>
+                                <input
+                                    type="text"
+                                    value={previousDeliveryForm.babyWeightAtBirth}
+                                    onChange={(e) => setPreviousDeliveryForm({ ...previousDeliveryForm, babyWeightAtBirth: e.target.value })}
+                                    placeholder="e.g. 3.2 kg"
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Complications</label>
+                                <textarea
+                                    rows={2}
+                                    value={previousDeliveryForm.complications}
+                                    onChange={(e) => setPreviousDeliveryForm({ ...previousDeliveryForm, complications: e.target.value })}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
+                                <button type="submit" className="btn btn-primary">{editingDeliveryId ? 'Update' : 'Add'}</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => { setShowPreviousDeliveryModal(false); setEditingDeliveryId(null); }}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {showVisitForm && (
                 <div className="form-container" style={{ marginBottom: '1.5rem' }}>
                     <h3 style={{ marginTop: 0, color: '#1e3a8a' }}>Record new visit</h3>
                     <form onSubmit={handleVisitSubmit}>
+                        <div className="input-group">
+                            <label>Visit type</label>
+                            <select
+                                value={visitData.type}
+                                onChange={(e) => setVisitData({ ...visitData, type: e.target.value })}
+                            >
+                                {VISIT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                        </div>
+                        <div className="input-group">
+                            <label>Reason *</label>
+                            <select
+                                required
+                                value={visitData.reason}
+                                onChange={(e) => setVisitData({ ...visitData, reason: e.target.value })}
+                            >
+                                <option value="">Select reason</option>
+                                {reasons.map((r) => <option key={r} value={r}>{r}</option>)}
+                            </select>
+                        </div>
                         <div className="input-group">
                             <label>Branch</label>
                             <select
@@ -157,7 +343,7 @@ const PatientDetails = () => {
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
                             <button type="submit" className="btn btn-primary">Save visit</button>
-                            <button type="button" className="btn btn-secondary" onClick={() => setShowVisitForm(false)}>Cancel</button>
+                            <button type="button" className="btn btn-secondary" onClick={() => { setShowVisitForm(false); setVisitData(initialVisitData); }}>Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -169,17 +355,21 @@ const PatientDetails = () => {
                     <thead>
                         <tr>
                             <th>Date</th>
+                            <th>Type</th>
+                            <th>Reason</th>
                             <th>Branch</th>
                             <th>Notes</th>
                         </tr>
                     </thead>
                     <tbody>
                         {visits.length === 0 && (
-                            <tr><td colSpan="3">No visits yet.</td></tr>
+                            <tr><td colSpan="5">No visits yet.</td></tr>
                         )}
                         {visits.map((v) => (
                             <tr key={v.id}>
                                 <td>{v.date ? new Date(v.date).toLocaleDateString() : '—'}</td>
+                                <td>{v.type ?? '—'}</td>
+                                <td>{v.reason ?? '—'}</td>
                                 <td>{v.ClinicBranch ? v.ClinicBranch.name : v.clinicBranchId}</td>
                                 <td>{v.notes || '—'}</td>
                             </tr>
@@ -188,9 +378,53 @@ const PatientDetails = () => {
                 </table>
             </div>
 
+            {/* Previous Deliveries (new table) */}
+            <div className="table-container" style={{ marginTop: '1.5rem' }}>
+                <h3 className="table-section-header" style={{ marginTop: 0 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Baby size={20} /> Previous Deliveries</span>
+                    <button type="button" className="btn btn-primary" style={{ marginLeft: 'auto', padding: '4px 12px', fontSize: '0.9rem' }} onClick={openAddPreviousDelivery}>
+                        <Plus size={16} /> Add
+                    </button>
+                </h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date of entry</th>
+                            <th>Delivery date</th>
+                            <th>Type</th>
+                            <th>Baby gender</th>
+                            <th>Baby weight at birth</th>
+                            <th>Complications</th>
+                            <th>Recorded by</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {previousDeliveries.length === 0 && (
+                            <tr><td colSpan="8">No previous deliveries. Click &quot;Add Previous Delivery&quot; to add one.</td></tr>
+                        )}
+                        {previousDeliveries.map((d) => (
+                            <tr key={d.id}>
+                                <td>{d.dateOfEntry ? new Date(d.dateOfEntry).toLocaleDateString() : '—'}</td>
+                                <td>{d.deliveryDate ? new Date(d.deliveryDate).toLocaleDateString() : '—'}</td>
+                                <td>{d.deliveryType ?? '—'}</td>
+                                <td>{d.babyGender ?? '—'}</td>
+                                <td>{d.babyWeightAtBirth ?? '—'}</td>
+                                <td>{d.complications ?? '—'}</td>
+                                <td>{(d.Creator && d.Creator.name) || '—'}</td>
+                                <td>
+                                    <button type="button" className="btn btn-secondary" style={{ marginRight: '4px', padding: '4px 8px' }} onClick={() => openEditPreviousDelivery(d)}>Edit</button>
+                                    <button type="button" className="btn btn-secondary" style={{ padding: '4px 8px' }} onClick={() => handleDeletePreviousDelivery(d.id)}>Delete</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
             {deliveryHistories.length > 0 && (
                 <div className="table-container" style={{ marginTop: '1.5rem' }}>
-                    <h3><Heart size={20} /> Delivery history</h3>
+                    <h3><Heart size={20} /> Delivery history (legacy)</h3>
                     <table>
                         <thead>
                             <tr>

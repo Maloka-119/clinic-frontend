@@ -154,6 +154,22 @@ textarea { grid-column: 1 / -1; }
     overflow-y: auto;
 }
 
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    padding-right: 2rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1e293b;
+}
+
 .close-modal {
     position: absolute;
     top: 1rem;
@@ -163,6 +179,7 @@ textarea { grid-column: 1 / -1; }
     font-size: 1.5rem;
     cursor: pointer;
     color: #64748b;
+    padding: 0.25rem;
 }
 /* Auth Styles */
 .auth-wrapper {
@@ -234,6 +251,37 @@ textarea { grid-column: 1 / -1; }
     outline: none;
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input-group textarea {
+    padding: 0.8rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    resize: vertical;
+}
+
+.input-group select {
+    padding: 0.8rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.patient-entry-form .form-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.patient-entry-form .form-section:last-of-type {
+    border-bottom: none;
+}
+
+.patient-entry-form .form-section h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: #1e293b;
 }
 
 .w-full {
@@ -419,9 +467,478 @@ textarea { grid-column: 1 / -1; }
 .btn-cancel { background-color: #9ca3af; color: white; }
 .btn-cancel:hover { background-color: #6b7280; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.15); }
 
-/* ================= Responsive ================= */
+/* ================= App header (shared gradient header) ================= */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    padding: 15px 20px;
+    background: linear-gradient(90deg, #6EE7B7, #3B82F6);
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.app-header .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Table scroll wrapper for horizontal scroll on small screens */
+.table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+.table-scroll-wrapper .table-container {
+    min-width: 0;
+}
+
+.table-scroll-wrapper table {
+    min-width: 600px;
+}
+
+/* Status badges: green = active, yellow = inactive (Admin Clinics) */
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.status-badge--active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-badge--inactive {
+    background-color: #fef9c3;
+    color: #a16207;
+}
+
+/* Clinics table: horizontal scroll + responsive buttons/badges */
+.clinics-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+.clinics-table-wrapper .table-container {
+    min-width: 0;
+}
+
+.clinics-table-wrapper table {
+    min-width: 600px;
+}
+
+@media (max-width: 768px) {
+    .status-badge {
+        padding: 3px 8px;
+        font-size: 0.8rem;
+    }
+
+    .clinics-table-wrapper table {
+        min-width: 500px;
+    }
+
+    .clinics-table-wrapper .clinic-toggle-btn {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .status-badge {
+        padding: 2px 6px;
+        font-size: 0.75rem;
+    }
+
+    .clinics-table-wrapper table {
+        min-width: 480px;
+    }
+
+    .clinics-table-wrapper .clinic-toggle-btn {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Users tab: same status badges + responsive toggle buttons */
+.user-toggle-btn {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .user-toggle-btn {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-toggle-btn {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Users tab table scroll on small screens */
+.users-tab-wrapper .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.users-tab-wrapper table {
+    min-width: 400px;
+}
+
+@media (max-width: 480px) {
+    .users-tab-wrapper table {
+        min-width: 320px;
+    }
+}
+
+/* ================= Responsive: Tablet (768px) ================= */
 @media (max-width: 768px) {
   .pregnancy-form-container form {
     grid-template-columns: 1fr;
   }
+
+  .container {
+    padding: 1rem;
+    max-width: 100%;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .app-header {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .app-header .header-actions {
+    justify-content: center;
+  }
+
+  .app-header .header-actions a,
+  .app-header .header-actions button {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .card {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .table-container {
+    border-radius: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-container table {
+    min-width: 500px;
+  }
+
+  th, td {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-width: none;
+    margin: 1rem;
+    padding: 1.25rem;
+    max-height: 85vh;
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .close-modal {
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .auth-card {
+    margin: 1rem;
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+
+  .auth-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .auth-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .input-group {
+    margin-bottom: 1rem;
+  }
+
+  .input-group input,
+  .input-group select,
+  .input-group textarea {
+    padding: 0.65rem;
+    font-size: 16px; /* prevents zoom on iOS */
+  }
+
+  .form-section h3 {
+    font-size: 1rem;
+  }
+
+  .patient-entry-form .form-section {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-row {
+    flex-direction: column;
+  }
+
+  .action-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ================= Responsive: Mobile (480px) ================= */
+@media (max-width: 480px) {
+  body {
+    font-size: 15px;
+  }
+
+  .container {
+    padding: 0.75rem;
+  }
+
+  .app-header {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .app-header .header-actions {
+    flex-direction: column;
+  }
+
+  .app-header .header-actions a,
+  .app-header .header-actions button {
+    width: 100%;
+  }
+
+  .page-header {
+    margin-bottom: 1rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .btn {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.875rem;
+  }
+
+  .table-container {
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .table-container table {
+    min-width: 400px;
+    font-size: 0.85rem;
+  }
+
+  th, td {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  .modal-content {
+    width: 100%;
+    margin: 0.5rem;
+    padding: 1rem;
+    max-height: 90vh;
+  }
+
+  .auth-wrapper {
+    padding: 0.5rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+
+  .auth-card {
+    padding: 1.25rem;
+  }
+
+  .auth-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .auth-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .auth-footer {
+    font-size: 0.85rem;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  /* Form actions stack on mobile */
+  div[style*="display: flex"][style*="gap"] {
+    flex-wrap: wrap;
+  }
+}
+
+/* ================= Responsive: Desktop large (1200px+) ================= */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1200px;
+  }
+}
+
+/* ================= Utility: Responsive flex ================= */
+.resp-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.resp-flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Modal inner form spacing on small screens */
+@media (max-width: 768px) {
+  .modal-content .input-group {
+    margin-bottom: 0.9rem;
+  }
+
+  .modal-content form > div[style*="display: flex"] {
+    flex-direction: column;
+  }
+
+  .modal-content form .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Patient details card grid and section headers */
+@media (max-width: 600px) {
+  .card div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .table-section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .table-section-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.table-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.patient-detail-card {
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+  .patient-detail-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .patient-detail-card {
+    padding: 0.75rem;
+  }
+}
+
+/* Hide overflow on body when modal open (optional, for touch devices) */
+.modal-overlay {
+  padding: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure tables inside table-container scroll */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-container table {
+  min-width: 320px;
 }
