@@ -32,11 +32,13 @@ const AdminDashboard = () => {
         ownerEmail: '',
         ownerPassword: ''
     });
-    const displayName = 'Malak';
+    const [selectedClinicFilter, setSelectedClinicFilter] = useState('all');
 
     const loadClinics = () => {
         listClinics()
-            .then((res) => setClinics(Array.isArray(res.data) ? res.data : []))
+            .then((res) => {
+                setClinics(Array.isArray(res.data) ? res.data : []);
+            })
             .catch((err) =>
                 Swal.fire({
                     icon: 'error',
@@ -64,7 +66,8 @@ const AdminDashboard = () => {
     }, []);
 
     const owners = users.filter((u) => u.role === 'OWNER');
-    const getOwnerForClinic = (clinicId) => owners.find((o) => o.clinicId === clinicId);
+    const getOwnerForClinic = (clinicId) =>
+        owners.find((o) => String(o.clinicId) === String(clinicId));
 
     const handleCreateClinic = async (e) => {
         e.preventDefault();
@@ -85,7 +88,7 @@ const AdminDashboard = () => {
                 html: `
                     Clinic ID: <strong>${clinic.id ?? '—'}</strong><br/>
                     Name: <strong>${clinic.name ?? '—'}</strong><br/>
-                    Owner must be activated to use the system.
+                    Owner is active. Activate the clinic to allow login.
                 `
             });
         } catch (err) {
@@ -97,77 +100,68 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleToggleClinicActive = async (clinic) => {
-        const action = clinic.isActive ? 'deactivate' : 'activate';
-        const { value } = await Swal.fire({
-            title: `${action} clinic "${clinic.name}"?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes'
-        });
-        if (!value) return;
-        try {
-            const res = await toggleClinicActive(clinic.id);
-            const updatedClinic = res.data?.clinic;
-            const newActive = updatedClinic && (updatedClinic.isActive === true || updatedClinic.isActive === 1);
-            if (updatedClinic != null) {
-                setClinics((prev) =>
-                    prev.map((c) => (c.id === clinic.id ? { ...c, isActive: Boolean(newActive) } : c))
-                );
-            } else {
-                loadClinics();
-            }
-            Swal.fire({
-                icon: 'success',
-                title: `Clinic ${action}d`,
-                showConfirmButton: false,
-                timer: 1500
-            });
-        } catch (err) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: err.response?.data?.message || 'Failed'
-            });
-        }
-    };
+const handleToggleClinicActive = async (clinic) => {
+    const action = clinic.isActive ? 'deactivate' : 'activate';
+    const { value } = await Swal.fire({
+        title: `${action} clinic "${clinic.name}"?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes'
+    });
+    if (!value) return;
 
-    const handleToggleUserActive = async (user) => {
-        const currentlyActive = Boolean(user.isActive);
-        const action = currentlyActive ? 'deactivate' : 'activate';
-        const { value } = await Swal.fire({
-            title: `${action} ${user.name}?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes'
-        });
-        if (!value) return;
-        try {
-            const res = await toggleEmployeeActive(user.id);
-            const updatedUser = res.data?.user;
-            const newActive = updatedUser && (updatedUser.isActive === true || updatedUser.isActive === 1);
-            if (updatedUser != null) {
-                setUsers((prev) =>
-                    prev.map((u) => (u.id === user.id ? { ...u, isActive: Boolean(newActive) } : u))
-                );
-            } else {
-                loadUsers();
-            }
-            Swal.fire({
-                icon: 'success',
-                title: `User ${action}d`,
-                showConfirmButton: false,
-                timer: 1500
-            });
-        } catch (err) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: err.response?.data?.message || 'Failed'
-            });
-        }
-    };
+    try {
+        const res = await toggleClinicActive(clinic.id);
+        const nextIsActive = res.data?.clinic?.isActive ?? !clinic.isActive;
 
+        // Immediate live UI update: only clinic status changes.
+        setClinics((prev) => prev.map((c) => (c.id === clinic.id ? { ...c, isActive: nextIsActive } : c)));
+
+        Swal.fire({
+            icon: 'success',
+            title: `Clinic ${action}d`,
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } catch (err) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.response?.data?.message || 'Failed'
+        });
+    }
+};
+const handleToggleUserActive = async (user) => {
+    const action = user.isActive ? 'deactivate' : 'activate';
+    const { value } = await Swal.fire({
+        title: `${action} ${user.name}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes'
+    });
+    if (!value) return;
+
+    try {
+        const res = await toggleEmployeeActive(user.id);
+        const nextIsActive = res.data?.user?.isActive ?? !user.isActive;
+
+        // Immediate live UI update: only user status changes.
+        setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, isActive: nextIsActive } : u)));
+
+        Swal.fire({
+            icon: 'success',
+            title: `User ${action}d`,
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } catch (err) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.response?.data?.message || 'Failed'
+        });
+    }
+};
     const handleLogout = () => {
         Swal.fire({
             title: 'Log out?',
@@ -189,7 +183,7 @@ const AdminDashboard = () => {
     return (
         <div className="container">
             <header className="app-header">
-                <span>{displayName}</span>
+                <span>Welcome Back Malak</span>
                 <div className="header-actions">
                     <Link to="/" className="btn btn-secondary" style={{ background: 'white', color: '#3B82F6' }}>
                         Home
@@ -212,7 +206,10 @@ const AdminDashboard = () => {
 
             <div className="page-header" style={{ marginBottom: '1rem' }}>
                 <h1 className="title">Admin Dashboard</h1>
-                <button className="btn btn-primary" onClick={() => setShowClinicModal(true)}>
+<p className="glow-note">
+  To activate or deactivate a clinic owner, use the toggles in both the Clinics and Users tabs to confirm the change.
+</p>  
+      <button className="btn btn-primary" onClick={() => setShowClinicModal(true)}>
                     + Add Clinic
                 </button>
             </div>
@@ -241,20 +238,20 @@ const AdminDashboard = () => {
                                     <th style={{ width: '80px' }}>Clinic ID</th>
                                     <th style={{ width: '20%' }}>Name</th>
                                     <th style={{ width: '12%' }}>Type</th>
+                                    <th style={{ width: '16%' }}>Clinic Active</th>
                                     <th style={{ width: '28%' }}>Owner</th>
-                                    <th style={{ width: '100px' }}>Active</th>
-                                    <th style={{ width: '130px' }}>Actions</th>
+                                    {/* <th style={{ width: '16%' }}>Owner Active</th> */}
+                                    <th style={{ width: '120px' }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {clinics.length === 0 && (
                                     <tr>
-                                        <td colSpan="6">No clinics yet. Create one to get started.</td>
+                                        <td colSpan="7">No clinics yet. Create one to get started.</td>
                                     </tr>
                                 )}
                                 {clinics.map((c) => {
                                     const owner = getOwnerForClinic(c.id);
-                                    const isActive = Boolean(c.isActive);
                                     return (
                                         <tr key={c.id}>
                                             <td>
@@ -263,24 +260,25 @@ const AdminDashboard = () => {
                                             <td>{c.name || '—'}</td>
                                             <td>{c.type || '—'}</td>
                                             <td>
+                                                <StatusBadge active={c.isActive} />
+                                            </td>
+                                            <td>
                                                 {owner ? (
                                                     <span title={`${owner.name} (${owner.email})`}>
                                                         {owner.name} ({owner.email})
                                                     </span>
                                                 ) : '—'}
                                             </td>
-                                            <td>
-                                                <StatusBadge active={isActive} />
-                                            </td>
+                                            {/* <td>{owner ? <StatusBadge active={owner.isActive} /> : '—'}</td> */}
                                             <td>
                                                 <button
                                                     type="button"
                                                     className="btn btn-secondary clinic-toggle-btn"
                                                     style={{ marginRight: '4px' }}
                                                     onClick={() => handleToggleClinicActive(c)}
-                                                    title={isActive ? 'Deactivate clinic' : 'Activate clinic'}
+                                                    title={c.isActive ? 'Deactivate clinic' : 'Activate clinic'}
                                                 >
-                                                    {isActive ? 'Deactivate' : 'Activate'}
+                                                    {c.isActive ? 'Deactivate' : 'Activate'}
                                                 </button>
                                             </td>
                                         </tr>
@@ -294,36 +292,72 @@ const AdminDashboard = () => {
 
             {tab === 'users' && (
                 <div className="users-tab-wrapper table-container">
+                    <div style={{ marginBottom: '1rem', maxWidth: '300px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Filter by Clinic</label>
+                        <select
+                            value={selectedClinicFilter}
+                            onChange={(e) => setSelectedClinicFilter(e.target.value)}
+                            style={{ width: '100%', padding: '8px' }}
+                        >
+                            <option value="all">All Clinics</option>
+                            {clinics.map((clinic) => (
+                                <option key={clinic.id} value={clinic.id}>
+                                    {clinic.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     {(() => {
                         const usersByClinic = {};
                         const clinicIdToName = {};
-                        clinics.forEach((cl) => {
-                            clinicIdToName[cl.id] = cl.name;
+
+                        clinics.forEach((cl) => (clinicIdToName[cl.id] = cl.name));
+
+                        const filteredUsers = users.filter((u) => {
+                            if (u.role === 'ADMIN') return false;
+                            if (selectedClinicFilter === 'all') return true;
+                            return String(u.clinicId) === String(selectedClinicFilter);
                         });
-                        users.forEach((u) => {
-                            if (u.role === 'ADMIN') return;
+
+                        filteredUsers.forEach((u) => {
                             const key = u.clinicId != null ? u.clinicId : 'no-clinic';
                             if (!usersByClinic[key]) usersByClinic[key] = [];
                             usersByClinic[key].push(u);
                         });
-                        const clinicIds = clinics.map((c) => c.id);
-                        const orderedKeys = [...clinicIds.filter((id) => usersByClinic[id]?.length), 'no-clinic'].filter((k) => usersByClinic[k]?.length);
-                        if (orderedKeys.length === 0 && users.filter((u) => u.role !== 'ADMIN').length === 0) {
-                            return (
-                                <p style={{ padding: '1.5rem', color: '#64748b' }}>No users (owners/employees) yet.</p>
-                            );
+
+                        const orderedKeys = [...Object.keys(usersByClinic)];
+
+                        if (orderedKeys.length === 0) {
+                            return <p style={{ padding: '1.5rem', color: '#64748b' }}>No users found.</p>;
                         }
+
                         return orderedKeys.map((key) => {
-                            const firstUser = (usersByClinic[key] || [])[0];
-                            const clinicName = key === 'no-clinic'
-                                ? 'No clinic assigned'
-                                : (firstUser?.Clinic?.name || clinicIdToName[key] || `Clinic #${key}`);
                             const list = usersByClinic[key] || [];
+                            const clinicName =
+                                key === 'no-clinic'
+                                    ? 'No clinic assigned'
+                                    : clinicIdToName[key] || `Clinic #${key}`;
+                            const clinicActive =
+                                key === 'no-clinic'
+                                    ? false
+                                    : clinics.find((c) => String(c.id) === String(key))?.isActive;
+
                             return (
                                 <div key={key} style={{ marginBottom: '1.5rem' }}>
-                                    <h3 style={{ margin: '0 0 0.75rem 0', padding: '0.5rem 0', borderBottom: '2px solid #e2e8f0', color: '#1e293b', fontSize: '1.1rem' }}>
+                                    <h3
+                                        style={{
+                                            margin: '0 0 0.75rem 0',
+                                            padding: '0.5rem 0',
+                                            borderBottom: '2px solid #e2e8f0',
+                                            color: '#1e293b',
+                                            fontSize: '1.1rem'
+                                        }}
+                                    >
                                         {clinicName}
+                                        {key !== 'no-clinic' && <span style={{ marginLeft: '0.75rem' }}><StatusBadge active={!!clinicActive} /></span>}
                                     </h3>
+
                                     <table style={{ tableLayout: 'auto', width: '100%' }}>
                                         <thead>
                                             <tr>
@@ -340,20 +374,20 @@ const AdminDashboard = () => {
                                                     <td>{u.name}</td>
                                                     <td>{u.email}</td>
                                                     <td>{u.role}</td>
-                                            <td>
-                                                <StatusBadge active={Boolean(u.isActive)} />
+                                                   <td>
+                                                <StatusBadge active={u.isActive} />
                                             </td>
-                                            <td>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-secondary user-toggle-btn"
-                                                    style={{ marginRight: '4px' }}
-                                                    onClick={() => handleToggleUserActive(u)}
-                                                    title={u.isActive ? 'Deactivate user' : 'Activate user'}
-                                                >
-                                                    {u.isActive ? 'Deactivate' : 'Activate'}
-                                                </button>
-                                            </td>
+                                                    <td>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-secondary user-toggle-btn"
+                                                            style={{ marginRight: '4px' }}
+                                                            onClick={() => handleToggleUserActive(u)}
+                                                            title={u.isActive ? 'Deactivate user' : 'Activate user'}
+                                                        >
+                                                            {u.isActive ? 'Deactivate' : 'Activate'}
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -370,9 +404,7 @@ const AdminDashboard = () => {
                     <div className="modal-content">
                         <div className="modal-header">
                             <h2>Add Clinic</h2>
-                            <button className="close-modal" onClick={() => setShowClinicModal(false)}>
-                                ×
-                            </button>
+                            <button className="close-modal" onClick={() => setShowClinicModal(false)}>×</button>
                         </div>
                         <form onSubmit={handleCreateClinic}>
                             <div className="input-group">
@@ -418,22 +450,12 @@ const AdminDashboard = () => {
                                     type="password"
                                     required
                                     value={clinicForm.ownerPassword}
-                                    onChange={(e) =>
-                                        setClinicForm({ ...clinicForm, ownerPassword: e.target.value })
-                                    }
+                                    onChange={(e) => setClinicForm({ ...clinicForm, ownerPassword: e.target.value })}
                                 />
                             </div>
                             <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
-                                <button type="submit" className="btn btn-primary">
-                                    Create Clinic
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    onClick={() => setShowClinicModal(false)}
-                                >
-                                    Cancel
-                                </button>
+                                <button type="submit" className="btn btn-primary">Create Clinic</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowClinicModal(false)}>Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -443,4 +465,4 @@ const AdminDashboard = () => {
     );
 };
 
-export default AdminDashboard;
+export default AdminDashboard; 

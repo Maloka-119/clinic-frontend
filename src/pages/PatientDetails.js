@@ -14,7 +14,13 @@ const initialVisitData = {
     date: '',
     notes: '',
     type: 'Checkup',
-    reason: ''
+    reason: '',
+    bloodSugar: '',
+    bloodPressure: '',
+    babyWeight: '',
+    babyAgeWeeks: '',
+    requiredTests: '',
+    previousTestResults: ''
 };
 
 const initialPreviousDelivery = {
@@ -88,7 +94,13 @@ const PatientDetails = () => {
                 date: visitData.date,
                 notes: visitData.notes.trim() || null,
                 type: visitData.type || null,
-                reason: visitData.reason || null
+                reason: visitData.reason || null,
+                bloodSugar: visitData.bloodSugar?.trim() || null,
+                bloodPressure: visitData.bloodPressure?.trim() || null,
+                babyWeight: visitData.babyWeight?.trim() || null,
+                babyAgeWeeks: visitData.babyAgeWeeks !== '' ? Number(visitData.babyAgeWeeks) : null,
+                requiredTests: visitData.requiredTests?.trim() || null,
+                previousTestResults: visitData.previousTestResults?.trim() || null
             };
             await addVisit(payload);
             Swal.fire({ icon: 'success', title: 'Visit added!', showConfirmButton: false, timer: 1500 });
@@ -102,7 +114,7 @@ const PatientDetails = () => {
 
     const deliveryHistories = data && (data.DeliveryHistories || data.deliveryHistories || []);
     const previousDeliveries = data && (data.PreviousDeliveries || data.previousDeliveries || []);
-    const husband = data && (data.HusbandInfo || data.husbandInfo);
+    const husband = data && (data.HusbandInfo ?? data.husbandInfo);
 
     const openAddPreviousDelivery = () => {
         setEditingDeliveryId(null);
@@ -197,13 +209,44 @@ const PatientDetails = () => {
                     <p style={{ margin: '12px 0 0 0', color: '#1e3a8a' }}>Chronic illnesses / family history: {data.chronicIllnessesOrFamilyHistory}</p>
                 )}
                 {husband && (
-                    <div style={{ marginTop: '1rem', padding: '12px', background: 'rgba(255,255,255,0.5)', borderRadius: '8px' }}>
-                        <h4 style={{ margin: '0 0 8px 0' }}><Briefcase size={16} /> Husband info</h4>
-                        <p style={{ margin: 0 }}>Name: {husband.name}</p>
-                        {husband.job && <p style={{ margin: 0 }}>Job: {husband.job}</p>}
-                        {husband.phone && <p style={{ margin: 0 }}>Phone: {husband.phone}</p>}
-                        {husband.marriageDuration && <p style={{ margin: 0 }}>Marriage duration: {husband.marriageDuration}</p>}
-                        {husband.marriageDate && <p style={{ margin: 0 }}>Marriage date: {new Date(husband.marriageDate).toLocaleDateString()}</p>}
+                    <div className="husband-info-card">
+                        <h4 className="husband-info-title"><Briefcase size={16} /> Husband information</h4>
+                        <div className="husband-info-grid">
+                            <div className="husband-info-item">
+                                <span className="husband-info-label">Husband name</span>
+                                <span className="husband-info-value">{husband.name ?? '—'}</span>
+                            </div>
+                            <div className="husband-info-item">
+                                <span className="husband-info-label">Job</span>
+                                <span className="husband-info-value">{husband.job ?? '—'}</span>
+                            </div>
+                            <div className="husband-info-item">
+                                <span className="husband-info-label">Phone</span>
+                                <span className="husband-info-value">{husband.phone ?? '—'}</span>
+                            </div>
+                            <div className="husband-info-item">
+                                <span className="husband-info-label">Blood type</span>
+                                <span className="husband-info-value">{husband.bloodType ?? '—'}</span>
+                            </div>
+                            <div className="husband-info-item">
+                                <span className="husband-info-label">RH factor</span>
+                                <span className="husband-info-value">{husband.rhFactor ?? '—'}</span>
+                            </div>
+                            <div className="husband-info-item">
+                                <span className="husband-info-label">Marriage duration</span>
+                                <span className="husband-info-value">{husband.marriageDuration ?? '—'}</span>
+                            </div>
+                            {husband.marriageDate && (
+                                <div className="husband-info-item">
+                                    <span className="husband-info-label">Marriage date</span>
+                                    <span className="husband-info-value">{new Date(husband.marriageDate).toLocaleDateString()}</span>
+                                </div>
+                            )}
+                            <div className="husband-info-item husband-info-item--full">
+                                <span className="husband-info-label">Semen analysis result</span>
+                                <span className="husband-info-value">{husband.semenAnalysisResult ?? '—'}</span>
+                            </div>
+                        </div>
                     </div>
                 )}
                 <div style={{ marginTop: '1rem', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -341,6 +384,63 @@ const PatientDetails = () => {
                                 onChange={(e) => setVisitData({ ...visitData, notes: e.target.value })}
                             />
                         </div>
+                        <div className="visit-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+                            <div className="input-group">
+                                <label>Blood sugar</label>
+                                <input
+                                    type="text"
+                                    value={visitData.bloodSugar}
+                                    onChange={(e) => setVisitData({ ...visitData, bloodSugar: e.target.value })}
+                                    placeholder="e.g. 95 mg/dL"
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Blood pressure</label>
+                                <input
+                                    type="text"
+                                    value={visitData.bloodPressure}
+                                    onChange={(e) => setVisitData({ ...visitData, bloodPressure: e.target.value })}
+                                    placeholder="e.g. 120/80"
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Baby weight</label>
+                                <input
+                                    type="text"
+                                    value={visitData.babyWeight}
+                                    onChange={(e) => setVisitData({ ...visitData, babyWeight: e.target.value })}
+                                    placeholder="e.g. 3.2 kg"
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Baby age (weeks)</label>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={visitData.babyAgeWeeks}
+                                    onChange={(e) => setVisitData({ ...visitData, babyAgeWeeks: e.target.value })}
+                                    placeholder="e.g. 28"
+                                />
+                            </div>
+                        </div>
+                        <div className="input-group">
+                            <label>Required tests (تحاليل مطلوبه)</label>
+                            <textarea
+                                rows={2}
+                                value={visitData.requiredTests}
+                                onChange={(e) => setVisitData({ ...visitData, requiredTests: e.target.value })}
+                                placeholder="تحاليل مطلوبه"
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label>Previous test results (نتيجه التحاليل السابقه)</label>
+                            <textarea
+                                rows={2}
+                                value={visitData.previousTestResults}
+                                onChange={(e) => setVisitData({ ...visitData, previousTestResults: e.target.value })}
+                                placeholder="نتيجه التحاليل السابقه"
+                            />
+                        </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
                             <button type="submit" className="btn btn-primary">Save visit</button>
                             <button type="button" className="btn btn-secondary" onClick={() => { setShowVisitForm(false); setVisitData(initialVisitData); }}>Cancel</button>
@@ -358,12 +458,18 @@ const PatientDetails = () => {
                             <th>Type</th>
                             <th>Reason</th>
                             <th>Branch</th>
+                            <th>Blood sugar</th>
+                            <th>Blood pressure</th>
+                            <th>Baby weight</th>
+                            <th>Baby age (wks)</th>
+                            <th>Required tests</th>
+                            <th>Previous results</th>
                             <th>Notes</th>
                         </tr>
                     </thead>
                     <tbody>
                         {visits.length === 0 && (
-                            <tr><td colSpan="5">No visits yet.</td></tr>
+                            <tr><td colSpan="11">No visits yet.</td></tr>
                         )}
                         {visits.map((v) => (
                             <tr key={v.id}>
@@ -371,6 +477,12 @@ const PatientDetails = () => {
                                 <td>{v.type ?? '—'}</td>
                                 <td>{v.reason ?? '—'}</td>
                                 <td>{v.ClinicBranch ? v.ClinicBranch.name : v.clinicBranchId}</td>
+                                <td>{v.bloodSugar || '—'}</td>
+                                <td>{v.bloodPressure || '—'}</td>
+                                <td>{v.babyWeight || '—'}</td>
+                                <td>{v.babyAgeWeeks != null ? v.babyAgeWeeks : '—'}</td>
+                                <td>{v.requiredTests ? (v.requiredTests.length > 30 ? v.requiredTests.slice(0, 30) + '…' : v.requiredTests) : '—'}</td>
+                                <td>{v.previousTestResults ? (v.previousTestResults.length > 30 ? v.previousTestResults.slice(0, 30) + '…' : v.previousTestResults) : '—'}</td>
                                 <td>{v.notes || '—'}</td>
                             </tr>
                         ))}

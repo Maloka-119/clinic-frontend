@@ -11,7 +11,22 @@ body {
     max-width: 1200px;
     margin: 0 auto;
 }
+.glow-note {
+  font-size: 1rem;
+  color: #6b7280; /* رمادي هادي */
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-top: 30px;
+  display: inline-block;
+  line-height: 1.4;
+  text-shadow: 0 0 3px #9ca3af, 0 0 6px #9ca3af, 0 0 9px #9ca3af; /* لمعة بسيطة */
+  animation: glow 1.5s infinite alternate;
+}
 
+@keyframes glow {
+  from { text-shadow: 0 0 3px #9ca3af, 0 0 6px #9ca3af, 0 0 9px #9ca3af; }
+  to   { text-shadow: 0 0 5px #9ca3af, 0 0 10px #9ca3af, 0 0 15px #9ca3af; }
+}
 /* Header & Typography */
 .page-header {
     display: flex;
@@ -26,17 +41,32 @@ body {
     color: #1e293b;
 }
 
-/* Buttons */
+/* Buttons – consistent styling, no underlines or unwanted outlines */
+button,
+.btn {
+    text-decoration: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+button:focus-visible,
+.btn:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
 .btn {
     padding: 0.6rem 1.2rem;
     border-radius: 8px;
     border: none;
     cursor: pointer;
     font-weight: 500;
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    transition: background 0.3s;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.btn:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary { background-color: #2563eb; color: white; }
@@ -46,6 +76,7 @@ body {
 .btn-success:hover { background-color: #15803d; }
 
 .btn-secondary { background-color: #cbd5e1; color: #334155; }
+.btn-secondary:hover { background-color: #94a3b8; }
 
 /* Cards & Information */
 .card {
@@ -61,6 +92,53 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
+}
+
+/* Husband information block (patient details) */
+.husband-info-card {
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+.husband-info-title {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.husband-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem 1.5rem;
+}
+.husband-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.husband-info-item--full {
+    grid-column: 1 / -1;
+}
+.husband-info-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #64748b;
+}
+.husband-info-value {
+    font-size: 0.9375rem;
+    color: #1e293b;
+}
+@media (max-width: 600px) {
+    .husband-info-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Tables */
@@ -319,25 +397,23 @@ textarea { grid-column: 1 / -1; }
   margin-bottom: 25px;
 }
 
-/* ================= Buttons ================= */
+/* ================= Buttons (align with main .btn) ================= */
 .btn {
-  padding: 8px 16px;
-  border: none;
+  padding: 0.6rem 1.2rem;
   border-radius: 8px;
+  border: none;
   cursor: pointer;
   font-weight: 500;
-  transition: 0.3s;
+  text-decoration: none;
+  outline: none;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
-
-.btn-success { background-color: #34d399; color: white; }
-.btn-success:hover { background-color: #059669; }
-
-.btn-primary { background-color: #3b82f6; color: white; }
+.btn-success { background-color: #16a34a; color: white; }
+.btn-success:hover { background-color: #15803d; }
+.btn-primary { background-color: #2563eb; color: white; }
 .btn-primary:hover { background-color: #1d4ed8; }
-
-.btn-secondary { background-color: #9ca3af; color: white; }
-.btn-secondary:hover { background-color: #6b7280; }
-
+.btn-secondary { background-color: #cbd5e1; color: #334155; }
+.btn-secondary:hover { background-color: #94a3b8; }
 .btn-info { background-color: #0ea5e9; color: white; }
 .btn-info:hover { background-color: #0284c7; }
 
@@ -387,6 +463,9 @@ textarea { grid-column: 1 / -1; }
   font-size: 13px;
   cursor: pointer;
   font-weight: 500;
+  text-decoration: none;
+  outline: none;
+  border: none;
   transition: all 0.3s ease;
   box-shadow: 0 3px 8px rgba(0,0,0,0.08);
 }
@@ -444,9 +523,11 @@ textarea { grid-column: 1 / -1; }
 .btn-edit, .btn-delete, .btn-add, .btn-cancel {
   padding: 8px 16px;
   border: none;
-  border-radius: 20px; /* أنسيابي */
+  border-radius: 20px;
   font-weight: 500;
   cursor: pointer;
+  text-decoration: none;
+  outline: none;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
